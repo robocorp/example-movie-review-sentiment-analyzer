@@ -1,0 +1,12 @@
+==============================================================================
+Tasks :: A movie review sentiment analyzer robot. Tries to classify written...
+==============================================================================
+Analyze movie reviews, like a boss.                                   | FAIL |
+Element 'css:.reviewsText .card' not visible after 5 seconds.
+------------------------------------------------------------------------------
+Tasks :: A movie review sentiment analyzer robot. Tries to classif... | FAIL |
+1 critical task, 0 passed, 1 failed
+1 task total, 0 passed, 1 failed
+==============================================================================
+Output:  /Users/janipalsamaki/Projects/example-movie-review-sentiment-analyzer/output/output.xml
+Log:     /Users/janipalsamaki/Projects/example-movie-review-sentiment-analyzer/output/log.html
