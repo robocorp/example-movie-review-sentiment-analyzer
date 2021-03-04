@@ -4,7 +4,7 @@ Documentation     A movie review sentiment analyzer robot. Tries to classify
 ...               written free-text reviews either as positive or negative.
 ...               How hard can it be? What could possibly go wrong? 😅
 Library           RPA.core.notebook
-Library           RPA.Browser
+Library           RPA.Browser.Selenium
 Library           RPA.Cloud.AWS    robocloud_vault_name=aws
 
 *** Variables ***
