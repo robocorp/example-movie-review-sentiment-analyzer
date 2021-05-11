@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 *** Settings ***
 Documentation     A movie review sentiment analyzer robot. Tries to classify
 ...               written free-text reviews either as positive or negative.
@@ -23,9 +22,12 @@ Open movie reviews website
 
 *** Keywords ***
 Initialize sentiment services
-    Run Keyword Unless    ${USE_COMPREHEND}    Open sentiment analysis website
+    IF    ${USE_COMPREHEND}
+        Initialize Comprehend client
+    ELSE
+        Open sentiment analysis website
+    END
     Open movie reviews website
-    Run Keyword If    ${USE_COMPREHEND}    Initialize Comprehend client
 
 *** Keywords ***
 Open sentiment analysis website
@@ -33,12 +35,16 @@ Open sentiment analysis website
 
 *** Keywords ***
 Initialize Comprehend client
-    Init Comprehend Client    use_robocloud_vault=True    region=${AWS_REGION}
+    Init Comprehend Client
+    ...    use_robocloud_vault=True
+    ...    region=${AWS_REGION}
 
 *** Keywords ***
 Switch to movie reviews website
-    Run Keyword Unless    ${USE_COMPREHEND}    Switch Browser    ${MOVIE_BROWSER_INDEX}
-    Run Keyword Unless    ${USE_COMPREHEND}    Wait Until Page Contains    RPA Challenge
+    IF    ${USE_COMPREHEND} == False
+        Switch Browser    ${MOVIE_BROWSER_INDEX}
+        Wait Until Page Contains    RPA Challenge
+    END
 
 *** Keywords ***
 Search popular movies
@@ -87,29 +93,49 @@ Comprehend sentiment
     [Arguments]    ${text}
     ${sentiment}=    Detect Sentiment    ${text}
     Notebook Json    ${sentiment}
-    ${sentiment_score}=    Set Variable If    "${sentiment["Sentiment"]}" == "NEGATIVE"    -1    1
+    IF    "${sentiment["Sentiment"]}" == "NEGATIVE"
+        ${sentiment_score}=    Set Variable    -1
+    ELSE
+        ${sentiment_score}=    Set Variable    1
+    END
     [Return]    ${sentiment_score}
 
 *** Keywords ***
 Classify reviews
     [Arguments]    @{reviews}
     FOR    ${review}    IN    @{reviews}
-        ${review_text}=    Get Text    ${review.find_element_by_class_name("card-content")}
+        ${review_text}=
+        ...    Get Text
+        ...    ${review.find_element_by_class_name("card-content")}
         Notebook Print    REVIEW: ${review_text}
-        ${sentiment}=    Run Keyword If    ${USE_COMPREHEND}    Comprehend sentiment    ${review_text}
-        ...    ELSE    Get sentiment    ${review_text}
+        IF    ${USE_COMPREHEND}
+            ${sentiment}=    Comprehend sentiment    ${review_text}
+        ELSE
+            ${sentiment}=    Get sentiment    ${review_text}
+        END
         Switch to movie reviews website
-        ${actions}=    Get WebElement    ${review.find_element_by_class_name("card-action")}
-        ${positive_link}=    Get WebElement    ${actions.find_element_by_css_selector("a:first-child")}
-        ${negative_link}=    Get WebElement    ${actions.find_element_by_css_selector("a:last-child")}
-        Run Keyword If    ${sentiment} >= 0    Click Link    ${positive_link}
-        Run Keyword If    ${sentiment} < 0    Click Link    ${negative_link}
+        ${actions}=
+        ...    Get WebElement
+        ...    ${review.find_element_by_class_name("card-action")}
+        ${positive_link}=
+        ...    Get WebElement
+        ...    ${actions.find_element_by_css_selector("a:first-child")}
+        ${negative_link}=
+        ...    Get WebElement
+        ...    ${actions.find_element_by_css_selector("a:last-child")}
+        IF    ${sentiment} >= 0
+            Click Link    ${positive_link}
+        ELSE IF    ${sentiment} < 0
+            Click Link    ${negative_link}
+        END
     END
 
 *** Keywords ***
 Switch to sentiment analysis website
-    Run Keyword Unless    ${USE_COMPREHEND}    Switch Browser    ${SENTIMENT_BROWSER_INDEX}
-    Run Keyword Unless    ${USE_COMPREHEND}    Wait Until Page Contains    Free Sentiment Analyzer
+    IF    ${USE_COMPREHEND} == False
+        Switch Browser    ${SENTIMENT_BROWSER_INDEX}
+        Wait Until Page Contains    Free Sentiment Analyzer
+    END
 
 *** Keywords ***
 Get sentiment
@@ -117,8 +143,11 @@ Get sentiment
     Switch to sentiment analysis website
     Input Text    accordionPaneSentimentAnalysis_content_txtText    ${text}
     Click Button    accordionPaneSentimentAnalysis_content_btnAnalyzeText
-    Wait Until Element Is Visible    css:#accordionPaneSentimentAnalysis_content_lblInterpretation span:nth-of-type(2)
-    ${sentiment_score_text}=    Get Text    css:#accordionPaneSentimentAnalysis_content_lblInterpretation span:nth-of-type(2)
+    Wait Until Element Is Visible
+    ...    css:#accordionPaneSentimentAnalysis_content_lblInterpretation span:nth-of-type(2)
+    ${sentiment_score_text}=
+    ...    Get Text
+    ...    css:#accordionPaneSentimentAnalysis_content_lblInterpretation span:nth-of-type(2)
     ${sentiment_score}=    Convert To Number    ${sentiment_score_text}
     Notebook Print    SENTIMENT: ${sentiment_score}
     [Return]    ${sentiment_score}
@@ -127,7 +156,8 @@ Get sentiment
 Close movie modal
     Switch to movie reviews website
     Click Element When Visible    css:.modal-close
-    Wait Until Page Does Not Contain Element    css:.modal-overlay.velocity-animating
+    Wait Until Page Does Not Contain Element
+    ...    css:.modal-overlay.velocity-animating
 
 *** Keywords ***
 Submit challenge. See? Easy!
@@ -136,7 +166,9 @@ Submit challenge. See? Easy!
 *** Keywords ***
 Admire my accomplishment!
     Wait Until Element Is Visible    css=.congratulations
-    Capture Element Screenshot    css=.congratulations    challenge-results.png
+    Capture Element Screenshot
+    ...    css=.congratulations
+    ...    challenge-results.png
 
 *** Tasks ***
 Analyze movie reviews, like a boss.
